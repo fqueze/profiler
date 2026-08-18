@@ -1353,6 +1353,8 @@ export function formatThreadSamplesBottomUpResult(
   return output;
 }
 
+const DEFAULT_TOP_NAMES = 15;
+
 /**
  * Format a ThreadMarkersResult as plain text.
  */
@@ -1413,15 +1415,19 @@ export function formatThreadMarkersResult(
     return lines.join('\n');
   }
 
+  // Flags that only do something in the "By Name" branch below; left empty in
+  // the --group-by branch so the hint never advertises a silent no-op.
+  let aggregateOnlyFlags: string[] = [];
+
   // Handle custom grouping if present
   if (result.customGroups && result.customGroups.length > 0) {
     formatMarkerGroupsForDisplay(lines, result.customGroups, 0);
   } else {
-    // Default aggregation by marker name
     const W_STAT_NAME = 25;
     const W_STAT_COUNT = 5;
-    lines.push('By Name (top 15):');
-    const topTypes = result.byType.slice(0, 15);
+    const nameLimit = result.topNames ?? DEFAULT_TOP_NAMES;
+    lines.push(`By Name (top ${nameLimit}):`);
+    const topTypes = result.byType.slice(0, nameLimit);
     for (const stats of topTypes) {
       let line = `  ${stats.markerName.padEnd(W_STAT_NAME)} ${stats.count.toString().padStart(W_STAT_COUNT)} markers`;
 
@@ -1459,11 +1465,12 @@ export function formatThreadMarkersResult(
       }
     }
 
-    if (result.byType.length > 15) {
-      // This list is capped at 15 by the formatter, not by --limit, so point at
-      // what does show the rest rather than leaving a dead end.
+    if (result.byType.length > nameLimit) {
+      const hidden = result.byType.length - nameLimit;
+      // This list is capped by --top-names, not by --limit, so name the flag
+      // that expands it rather than leaving a dead end.
       lines.push(
-        `  ... (${result.byType.length - 15} more marker names: showing the top 15 of ${result.byType.length})`,
+        `  ... (${hidden} more marker names — use --top-names ${result.byType.length} to show all, or --top-names <N>)`,
         '  Use --json for every marker name, or --search <term> to narrow to one.'
       );
     }
@@ -1497,10 +1504,27 @@ export function formatThreadMarkersResult(
     }
 
     lines.push('');
+    aggregateOnlyFlags = ['--top-names <N>'];
   }
 
   lines.push(
-    'Use --search <term>, --category <name>, --min-duration <ms>, --max-duration <ms>, --has-stack, --limit <N>, --group-by <keys>, --auto-group, or --top-n <N> to filter/group markers, or m-<N> handles to inspect individual markers or zoom into their time range (profiler-cli zoom push m-<N>).'
+    'Use --list to see individual markers in chronological order instead of these aggregates.'
+  );
+  const flags = [
+    '--search <term>',
+    '--category <name>',
+    '--min-duration <ms>',
+    '--max-duration <ms>',
+    '--has-stack',
+    '--limit <N>',
+    '--group-by <keys>',
+    '--auto-group',
+    '--top-n <N>',
+    ...aggregateOnlyFlags,
+  ];
+  const flagList = `${flags.slice(0, -1).join(', ')}, or ${flags[flags.length - 1]}`;
+  lines.push(
+    `Use ${flagList} to filter/group markers, or m-<N> handles to inspect individual markers or zoom into their time range (profiler-cli zoom push m-<N>).`
   );
 
   return lines.join('\n');

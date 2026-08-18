@@ -309,6 +309,10 @@ export function registerThreadCommand(
         '--top-n <N>',
         'Number of top markers to include per group in JSON output (default: 5)'
       )
+      .option(
+        '--top-names <N>',
+        'Number of distinct marker names to show in the "By Name" aggregation (default: 15)'
+      )
       .option('--list', 'Show a flat chronological list of individual markers')
       .addHelpText(
         'after',
@@ -347,6 +351,7 @@ Examples:
       opts.groupBy !== undefined ||
       opts.autoGroup ||
       opts.topN !== undefined ||
+      opts.topNames !== undefined ||
       opts.list
     ) {
       markerFilters = {};
@@ -390,6 +395,9 @@ Examples:
       markerFilters.limit = parseLimitArg('--limit', opts.limit);
       if (opts.topN !== undefined) {
         markerFilters.topN = parseIntArg('--top-n', opts.topN, 1);
+      }
+      if (opts.topNames !== undefined) {
+        markerFilters.topNames = parseIntArg('--top-names', opts.topNames, 1);
       }
     }
 

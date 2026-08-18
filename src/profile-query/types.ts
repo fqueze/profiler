@@ -47,6 +47,8 @@ export type MarkerFilterOptions = {
   groupBy?: string; // Grouping strategy (e.g., "type,name" or "type,field:eventType")
   autoGroup?: boolean; // Automatically determine grouping based on field variance
   topN?: number; // Number of top markers to include per group in JSON output (default: 5)
+  // Names in the "by name" aggregation (default: 15); cf. `topN`, per-name.
+  topNames?: number;
   list?: boolean; // Return a flat chronological list of all individual markers
 };
 
@@ -697,6 +699,8 @@ export type ThreadMarkersResult = {
   totalMarkerCount: number;
   filteredMarkerCount: number;
   fullRangeMarkerCount?: number;
+  // Rows of `byType` to show; `byType` itself is never truncated.
+  topNames?: number;
   filters?: {
     searchString?: string;
     minDuration?: number;

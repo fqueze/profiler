@@ -214,3 +214,106 @@ describe('formatThreadMarkersResult zoom baseline', function () {
     expect(output).toContain('3 markers');
   });
 });
+
+// Build `count` distinct instant marker names, named Marker000, Marker001, ...
+function makeByType(count: number): ThreadMarkersResult['byType'] {
+  return Array.from({ length: count }, (_, i) => ({
+    markerName: `Marker${String(i).padStart(3, '0')}`,
+    count: count - i,
+    isInterval: false,
+    topMarkers: [],
+  }));
+}
+
+describe('formatThreadMarkersResult aggregate hints', function () {
+  it('advertises --list alongside the filter flags', function () {
+    const result = makeResult({ byType: makeByType(3) });
+
+    const output = formatThreadMarkersResult(result);
+    // The aggregate view groups by name; --list is the only mode that shows
+    // individual markers in order, so it must be discoverable from here.
+    expect(output).toContain('--list');
+    expect(output).toContain('chronological order');
+  });
+
+  it('does not advertise --list when already in flat list mode', function () {
+    const result = makeResult({
+      filteredMarkerCount: 1,
+      flatMarkers: [makeFlat()],
+    });
+
+    const output = formatThreadMarkersResult(result);
+    expect(output).not.toContain('--list');
+  });
+
+  it('names --top-names on the truncation line', function () {
+    const result = makeResult({ byType: makeByType(139) });
+
+    const output = formatThreadMarkersResult(result);
+    const truncationLine = output
+      .split('\n')
+      .find((l) => l.includes('more marker names'))!;
+    expect(truncationLine).toContain('124 more marker names');
+    // The line must say which flag reveals them, and the suggested value must
+    // be enough to show every name.
+    expect(truncationLine).toContain('--top-names 139');
+  });
+
+  it('shows 15 marker names by default', function () {
+    const result = makeResult({ byType: makeByType(20) });
+
+    const output = formatThreadMarkersResult(result);
+    expect(output).toContain('By Name (top 15):');
+    expect(output).toContain('Marker014');
+    expect(output).not.toContain('Marker015');
+    expect(output).toContain('5 more marker names');
+  });
+
+  it('shows more marker names when --top-names raises the cap', function () {
+    const result = makeResult({ byType: makeByType(20), topNames: 20 });
+
+    const output = formatThreadMarkersResult(result);
+    expect(output).toContain('By Name (top 20):');
+    expect(output).toContain('Marker019');
+    expect(output).not.toContain('more marker names');
+  });
+
+  it('still truncates when --top-names is below the name count', function () {
+    const result = makeResult({ byType: makeByType(20), topNames: 3 });
+
+    const output = formatThreadMarkersResult(result);
+    expect(output).toContain('By Name (top 3):');
+    expect(output).not.toContain('Marker003');
+    expect(output).toContain('17 more marker names — use --top-names 20');
+  });
+
+  it('does not advertise --top-names when --group-by replaced the By Name list', function () {
+    // With custom groups there is no "By Name" section for --top-names to cap,
+    // so the flag is a silent no-op and must not be offered here.
+    const result = makeResult({
+      byType: makeByType(20),
+      customGroups: [
+        { groupName: 'DOMEvent', count: 5, isInterval: false, topMarkers: [] },
+      ],
+    });
+
+    const output = formatThreadMarkersResult(result);
+    expect(output).not.toContain('By Name');
+    expect(output).not.toContain('--top-names');
+    // --top-n still applies: it caps the Examples list inside each custom
+    // group, so it stays advertised, and it takes the "or" as the last item.
+    expect(output).toContain('or --top-n <N> to filter/group markers');
+  });
+
+  it('advertises --top-names in the aggregate branch', function () {
+    const result = makeResult({ byType: makeByType(20) });
+
+    const output = formatThreadMarkersResult(result);
+    expect(output).toContain('By Name');
+    expect(output).toContain('--top-n <N>');
+    // The "or" moves to --top-names, the new last item; exactly one "or"
+    // introduces the flag list.
+    expect(output).toContain('--top-n <N>, or --top-names <N>');
+    expect(output).not.toContain('or --top-n <N>,');
+  });
+});

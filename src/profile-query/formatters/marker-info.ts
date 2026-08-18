@@ -899,6 +899,7 @@ export function collectThreadMarkers(
       totalMarkerCount: originalCount,
       filteredMarkerCount: filteredIndexes.length,
       fullRangeMarkerCount,
+      topNames: filterOptions.topNames,
       filters,
       byType,
       byCategory,

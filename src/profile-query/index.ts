@@ -81,6 +81,7 @@ import {
   collectMarkerStack,
   collectMarkerInfo,
   collectProfileLogs,
+  collectProfileMarkers,
 } from './formatters/marker-info';
 import { collectThreadPageLoad } from './formatters/page-load';
 import {
@@ -124,6 +125,7 @@ import type {
   ThreadFunctionsResult,
   ThreadPageLoadResult,
   ProfileLogsResult,
+  ProfileMarkersResult,
   CounterListResult,
   CounterInfoResult,
   SourceMapSourcesResult,
@@ -1328,6 +1330,23 @@ export class ProfileQuerier {
       ...result,
       context: this._getContextForThreadHandle(filterOptions.thread),
     };
+  }
+
+  /**
+   * Search markers across every thread at once: the same rows as
+   * `threadMarkers` in `--list` mode, plus the thread each match was found on
+   * and a per-thread match count.
+   */
+  async profileMarkers(
+    filterOptions: MarkerFilterOptions & { thread?: string } = {}
+  ): Promise<WithContext<ProfileMarkersResult>> {
+    const result = collectProfileMarkers(
+      this._store,
+      this._threadMap,
+      this._markerMap,
+      filterOptions
+    );
+    return { ...result, context: this._getContext() };
   }
 
   /**

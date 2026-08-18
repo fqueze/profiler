@@ -365,6 +365,7 @@ describe('profiler-cli basic functionality', () => {
       ['thread', 'functions', '--limit', '0'],
       ['thread', 'network', '--limit', '0'],
       ['profile', 'logs', '--limit', '0'],
+      ['profile', 'markers', '--limit', '0'],
       ['thread', 'page-load', '--jank-limit', '0'],
     ]) {
       const result = await cli(ctx, args);
@@ -491,6 +492,26 @@ describe('profiler-cli basic functionality', () => {
     expect(result.stdout).toContain('more markers omitted');
     expect(result.stdout).toContain('showing the first 1 of 3');
     expect(result.stdout).toContain('--limit 0');
+  });
+
+  it('profile markers requires a filter, but --limit opts into browsing', async () => {
+    await cli(ctx, ['load', 'src/test/fixtures/upgrades/processed-1.json']);
+
+    // An unfiltered sweep would dump arbitrary rows in profile order, which
+    // answers no question; the error has to name the flags that do.
+    const bare = await cliFail(ctx, ['profile', 'markers']);
+    expect(bare.exitCode).not.toBe(0);
+    const output = String(bare.stdout || '') + String(bare.stderr || '');
+    expect(output).toContain('profile markers needs a filter');
+    expect(output).toContain('--search');
+
+    // A filter satisfies it...
+    const filtered = await cli(ctx, ['profile', 'markers', '--search', 'a']);
+    expect(filtered.exitCode).toBe(0);
+
+    // ...and so does an explicit --limit, the opt-in to unfiltered browsing.
+    const limited = await cli(ctx, ['profile', 'markers', '--limit', '5']);
+    expect(limited.exitCode).toBe(0);
   });
 
   it('build hash mismatch stops the daemon before cleaning up the session', async () => {

@@ -10,6 +10,26 @@ npm install -g @firefox-devtools/profiler-cli@latest
 
 Requires Node.js >= 24.
 
+### Running an unreleased build
+
+To use fixes that have not reached npm yet, build the branch and call its `dist` path directly:
+
+```bash
+git clone https://github.com/fqueze/profiler.git && cd profiler
+git checkout profiler-cli-all
+yarn install && yarn build-cli
+```
+
+That writes `profiler-cli/dist/profiler-cli.js`. Run it by absolute path, or shadow the global
+command for a shell session:
+
+```bash
+alias profiler-cli="$PWD/profiler-cli/dist/profiler-cli.js"
+```
+
+Plain `profiler-cli` still runs the globally installed release, so agent sessions must use the
+absolute path (or the alias above) to exercise this build.
+
 ## Quick Start
 
 ```bash

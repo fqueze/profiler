@@ -46,6 +46,7 @@ import { VERSION } from './constants';
 import { registerProfileCommand } from './commands/profile';
 import { registerThreadCommand } from './commands/thread';
 import { registerMarkerCommand } from './commands/marker';
+import { registerScreenshotsCommand } from './commands/screenshots';
 import { registerFunctionCommand } from './commands/function';
 import { registerCounterCommand } from './commands/counter';
 import { registerZoomCommand } from './commands/zoom';
@@ -277,6 +278,7 @@ Session ownership:
   registerProfileCommand(program, SESSION_DIR);
   registerThreadCommand(program, SESSION_DIR);
   registerMarkerCommand(program, SESSION_DIR);
+  registerScreenshotsCommand(program, SESSION_DIR);
   registerFunctionCommand(program, SESSION_DIR);
   registerCounterCommand(program, SESSION_DIR);
   registerZoomCommand(program, SESSION_DIR);

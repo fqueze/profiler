@@ -104,6 +104,9 @@ CORE WORKFLOW
     profiler-cli marker info m-1234 m-1240   Several markers in one call (one record per handle)
     profiler-cli marker info m-1234..m-1240  Inclusive range of handles, e.g. consecutive list rows
     profiler-cli marker stack m-1234         Full stack trace at the time of a marker
+    profiler-cli screenshots --at 24.835 -o shots/    Each window on screen at t=24.835s
+    profiler-cli screenshots --range 11.2,11.4 -o shots/  All windows' frames in a range
+    profiler-cli marker screenshot m-1234 -o shot.jpg  Image from one CompositorScreenshot marker
     profiler-cli function info f-12          Function details (source location, library)
     profiler-cli function expand f-12        Show full untruncated function name
     profiler-cli function annotate f-12      Annotated source with per-line self/total timing
